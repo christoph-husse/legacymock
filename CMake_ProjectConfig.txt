@@ -1,0 +1,64 @@
+cmake_minimum_required (VERSION 2.8)
+
+project (Citrix)
+
+find_package(Boost)
+find_package(PythonInterp)
+
+set(ARTIFACTS_ROOT "${CMAKE_SOURCE_DIR}/_output/" CACHE PATH "Root directory for built libraries and executables.")
+
+if("$ENV{BOOST_ROOT} " STREQUAL " ")
+	set(BOOST_ROOT "${Boost_INCLUDE_DIRS}" CACHE PATH "Root directory to your boost installation.")
+else()
+	set(BOOST_ROOT "$ENV{BOOST_ROOT}" CACHE PATH "Root directory to your boost installation.")
+endif()
+
+if("$ENV{PYTHON_BINARY} " STREQUAL " ")
+	set(PYTHON_BINARY "${PYTHON_EXECUTABLE}" CACHE PATH "Path to your python executable.")
+else()
+	set(PYTHON_BINARY "$ENV{PYTHON_BINARY}" CACHE PATH "Path to your python executable.")
+endif()
+
+if(PYTHON_BINARY STREQUAL "PYTHON_EXECUTABLE-NOTFOUND")
+	set(Python_FOUND 0)
+	message(WARNING "No python executable found. This will omit several build events that are required from time to time. Please ensure you have python installed correctly.")
+else()
+	set(Python_FOUND 1)
+endif()
+
+if("$ENV{GTEST_ROOT} " STREQUAL " ")
+	set(GTEST_ROOT "${CMAKE_SOURCE_DIR}/citrix.gmock/include" CACHE PATH "Root directory to your gtest.")
+else()
+	set(GTEST_ROOT "$ENV{GTEST_ROOT}" CACHE PATH "Root directory to your gtest.")
+endif()
+
+message (INFO " Using Boost: '${BOOST_ROOT}'")
+message (INFO " Using GMock: '${GTEST_ROOT}'")
+message (INFO " Using Python: '${PYTHON_BINARY}'")
+
+if("${BOOST_USE_LIBRARIES} " STREQUAL " ")
+	add_definitions(-DBOOST_ALL_NO_LIB)
+	message (INFO " Not using Boost-Libraries, doing source code inlining!")
+else()
+	link_directories("${BOOST_USE_LIBRARIES}")
+	message (INFO " Using Boost-Libraries: '${BOOST_USE_LIBRARIES}'")
+endif()
+
+add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+
+# do some tweaking depending on platform and build system.
+# See also: http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+    configure_msvc_runtime()
+
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+ELSE()
+    message(FATAL "Unrecognized operating system ${CMAKE_SYSTEM_NAME}!")
+ENDIF()
+
+# traverse source tree
+ADD_SUBDIRECTORIES("${CMAKE_SOURCE_DIR}")
